@@ -17,7 +17,7 @@ local scriptURLs = {
     [76381016848158] = "https://pastefy.app/K0zB6dzl/raw", -- Factory RNG
     [137034315542002] = "https://pastefy.app/ismiGrdU/raw", -- Egg Incremental
     [83942919686609] = "https://raw.githubusercontent.com/gumanba/Scripts/ac3206e03df2c4a08d40b558591a70f5d0e280e6/BuildaScamEmpire",
-    [94682676231618] = "https://raw.githubusercontent.com/gumanba/Scripts/16704d0733464c4b0de11124f549a9d724873831/MyFishingPier".
+    [94682676231618] = "https://raw.githubusercontent.com/gumanba/Scripts/16704d0733464c4b0de11124f549a9d724873831/MyFishingPier",
 
 -- ... [rest of your script URLs remain the same]
 }
