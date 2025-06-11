@@ -19,6 +19,7 @@ local scriptURLs = {
     [83942919686609] = "https://raw.githubusercontent.com/gumanba/Scripts/ac3206e03df2c4a08d40b558591a70f5d0e280e6/BuildaScamEmpire",
     [94682676231618] = "https://raw.githubusercontent.com/gumanba/Scripts/16704d0733464c4b0de11124f549a9d724873831/MyFishingPier",
     [3398014311] = "https://raw.githubusercontent.com/Kasep6720/Secret/Other-games/Restaurant%20Tycoon%202",
+
 -- ... [rest of your script URLs remain the same]
 }
 
