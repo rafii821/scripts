@@ -1,72 +1,84 @@
 --[[
-  Gabungan:
-    - Rayfield (Auto Win)
-    - GUI Sederhana (Auto Farm Uang & Auto Buka Telur)
-    - Keduanya tetap berjalan sendiri-sendiri!
---]]
+  Climb & Jump Tower Script PATCHED (All-in-One GUI)
+  - Rayfield UI, semua fitur dalam 1 menu!
+  - Auto Win (respawn tiap 60 detik, bukan lompat)
+  - Auto Farm Uang
+  - Auto Buka Telur (Egg Terdekat)
+  - Tidak ada GUI native, semua tombol/toggle di Rayfield!
+  - PATCH 2025: Aman untuk patch terbaru (respawn, bukan jump)
+  - By: rafii821 & Copilot
+]]
 
--- ===[ Rayfield Auto Win ]===
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "🗼 Climb and Jump Tower | Auto Win + AutoFarm",
+   Name = "🗼 Climb and Jump Tower | CloudHub Patched",
    LoadingTitle = "Climb And Jump Tower Script",
-   LoadingSubtitle = "Auto Win & AutoFarm",
+   LoadingSubtitle = "All-in-One (2025 Patch)",
    Theme = "Amethyst"
 })
 
 local MainTab = Window:CreateTab("Main🏠", nil)
-MainTab:CreateSection("Auto Win")
+MainTab:CreateSection("Auto Win & Farm")
+MainTab:CreateDivider()
 
 MainTab:CreateParagraph({
-   Title = "Auto Wins",
-   Content = "Script ini akan otomatis farming wins setiap detik dan melompat tiap 1 menit."
+   Title = "Auto Win & Farm",
+   Content = "Auto Win: farming wins tiap detik, respawn tiap 1 menit.\nAuto Farm: farming uang & buka telur terdekat otomatis."
 })
 
-local running = false
-local lastJumpTime = 0
+-- ======== [ VARIABEL DAN REMOTE ] ========
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local remoteEvent = ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteEvent")
+local drawHeroInvoke = ReplicatedStorage:WaitForChild("Tool"):WaitForChild("DrawUp"):WaitForChild("Msg"):WaitForChild("DrawHero")
+
+-- ======== [ AUTO WIN (RESPAWN PATCH) ] ========
+local autoWinRunning = false
+local lastRespawnTime = 0
 local autoWinThread
 
 local function stopAutoWin()
-    running = false
+    autoWinRunning = false
 end
 
 MainTab:CreateToggle({
-   Name = "Auto Wins",
+   Name = "Auto Wins (Respawn)",
    CurrentValue = false,
    Flag = "ToggleAutoWin",
-   Description = "Otomatis farming wins setiap detik, lompat tiap 1 menit.",
+   Description = "Otomatis farming wins tiap detik, respawn tiap 1 menit.",
    Callback = function(Value)
       if Value then
-         running = true
-         lastJumpTime = tick()
+         autoWinRunning = true
+         lastRespawnTime = tick()
          if autoWinThread then
-             -- Thread lama akan break sendiri saat running jadi false
+             -- Thread lama auto selesai sendiri
          end
          autoWinThread = task.spawn(function()
-            while running do
+            while autoWinRunning do
                -- Auto setting
                local args1 = { "isAutoOn", 1 }
-               game:GetService("ReplicatedStorage"):WaitForChild("ServerMsg"):WaitForChild("Setting"):InvokeServer(unpack(args1))
+               ReplicatedStorage:WaitForChild("ServerMsg"):WaitForChild("Setting"):InvokeServer(unpack(args1))
                task.wait()
 
                -- Fire event with value
                local args2 = { "\232\181\183\232\183\179", 14400.854642152786 }
-               game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args2))
+               remoteEvent:FireServer(unpack(args2))
                task.wait()
 
                -- Send win command
                local args3 = { "\233\162\134\229\143\150\230\165\188\233\161\182wins" }
-               game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args3))
+               remoteEvent:FireServer(unpack(args3))
                task.wait()
 
-               -- Jump every 60 seconds
-               if tick() - lastJumpTime >= 60 then
-                  local player = game:GetService("Players").LocalPlayer
-                  local character = player.Character
-                  if character and character:FindFirstChildOfClass("Humanoid") then
-                     character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-                     lastJumpTime = tick()
+               -- Respawn every 60 seconds
+               if tick() - lastRespawnTime >= 60 then
+                  if player then
+                     player:LoadCharacter()
+                     lastRespawnTime = tick()
                   end
                end
                task.wait(1)
@@ -78,57 +90,46 @@ MainTab:CreateToggle({
    end,
 })
 
--- ===[ GUI Sederhana (Auto Farm Uang & Telur) ]===
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
+-- ======== [ AUTO FARM UANG ] ========
+local autoMoneyRunning = false
+local autoMoneyThread
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-
--- Remote references
-local remoteEvent = ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteEvent")
-local drawHeroInvoke = ReplicatedStorage:WaitForChild("Tool"):WaitForChild("DrawUp"):WaitForChild("Msg"):WaitForChild("DrawHero")
-
--- UI Setup
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AutoFarmGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
-
-local function createButton(name, text, position)
-    local btn = Instance.new("TextButton")
-    btn.Name = name
-    btn.Size = UDim2.new(0, 140, 0, 40)
-    btn.Position = position
-    btn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextScaled = true
-    btn.Text = text
-    btn.Parent = screenGui
-    return btn
-end
-
-local farmMoneyBtn = createButton("FarmMoney", "Mulai Auto Uang", UDim2.new(0,10,0,10))
-local openEggBtn = createButton("OpenEgg", "Mulai Auto Telur", UDim2.new(0,160,0,10))
-
--- Flags
-local farmMoneyActive = false
-local openEggActive = false
-
--- Fungsi auto uang
 local function farmMoney()
     local args1 = {"\232\181\183\232\183\179", 14405.461171865463}
     local args2 = {"\232\181\183\232\183\179", 14400.405507802963}
     local args3 = {"\232\144\189\229\156\176"}
-
     remoteEvent:FireServer(unpack(args1))
     remoteEvent:FireServer(unpack(args2))
     remoteEvent:FireServer(unpack(args3))
 end
 
--- Fungsi auto telur (terdekat dari player)
+MainTab:CreateToggle({
+    Name = "Auto Farm Uang",
+    CurrentValue = false,
+    Flag = "ToggleMoneyFarm",
+    Description = "Otomatis farming uang.",
+    Callback = function(Value)
+        if Value then
+            autoMoneyRunning = true
+            if autoMoneyThread then
+                -- Thread lama auto selesai
+            end
+            autoMoneyThread = task.spawn(function()
+                while autoMoneyRunning do
+                    farmMoney()
+                    task.wait(0.33)
+                end
+            end)
+        else
+            autoMoneyRunning = false
+        end
+    end,
+})
+
+-- ======== [ AUTO BUKA TELUR (EGG TERDEKAT) ] ========
+local autoEggRunning = false
+local autoEggThread
+
 local function getEggsFolder()
     return Workspace:FindFirstChild("Eggs") or Workspace:FindFirstChild("Egg") or Workspace:FindFirstChild("EggModel")
 end
@@ -179,73 +180,40 @@ local function openEgg()
                 drawHeroInvoke:InvokeServer(unpack(args2))
             end)
             if not success then
-                warn("[AutoFarmGui] Gagal buka telur: "..tostring(err))
+                warn("[CloudHub] Gagal buka telur: "..tostring(err))
             end
         else
-            warn("[AutoFarmGui] EggID tidak ditemukan pada egg terdekat!")
+            warn("[CloudHub] EggID tidak ditemukan pada egg terdekat!")
         end
     else
-        warn("[AutoFarmGui] Tidak ada egg terdekat ditemukan!")
+        warn("[CloudHub] Tidak ada egg terdekat ditemukan!")
     end
 end
 
--- Coroutine
-local farmMoneyCoroutine
-local openEggCoroutine
-
-local function startFarmMoney()
-    if farmMoneyCoroutine then return end
-    farmMoneyActive = true
-    farmMoneyCoroutine = coroutine.create(function()
-        while farmMoneyActive do
-            farmMoney()
-            wait(0.33)
+MainTab:CreateToggle({
+    Name = "Auto Buka Telur (Egg Terdekat)",
+    CurrentValue = false,
+    Flag = "ToggleEggFarm",
+    Description = "Otomatis buka telur terdekat.",
+    Callback = function(Value)
+        if Value then
+            autoEggRunning = true
+            if autoEggThread then
+                -- Thread lama auto selesai
+            end
+            autoEggThread = task.spawn(function()
+                while autoEggRunning do
+                    openEgg()
+                    task.wait(1)
+                end
+            end)
+        else
+            autoEggRunning = false
         end
-    end)
-    coroutine.resume(farmMoneyCoroutine)
-end
+    end,
+})
 
-local function stopFarmMoney()
-    farmMoneyActive = false
-    farmMoneyCoroutine = nil
-end
-
-local function startOpenEgg()
-    if openEggCoroutine then return end
-    openEggActive = true
-    openEggCoroutine = coroutine.create(function()
-        while openEggActive do
-            openEgg()
-            wait(1)
-        end
-    end)
-    coroutine.resume(openEggCoroutine)
-end
-
-local function stopOpenEgg()
-    openEggActive = false
-    openEggCoroutine = nil
-end
-
--- Tombol klik
-farmMoneyBtn.MouseButton1Click:Connect(function()
-    farmMoneyActive = not farmMoneyActive
-    if farmMoneyActive then
-        farmMoneyBtn.Text = "Stop Auto Uang"
-        startFarmMoney()
-    else
-        farmMoneyBtn.Text = "Mulai Auto Uang"
-        stopFarmMoney()
-    end
-end)
-
-openEggBtn.MouseButton1Click:Connect(function()
-    openEggActive = not openEggActive
-    if openEggActive then
-        openEggBtn.Text = "Stop Auto Telur"
-        startOpenEgg()
-    else
-        openEggBtn.Text = "Mulai Auto Telur"
-        stopOpenEgg()
-    end
-end)
+MainTab:CreateParagraph({
+    Title = "Info & Catatan",
+    Content = "Semua fitur bisa diaktifkan bersamaan. Script PATCH aman untuk update 2025 (respawn, bukan jump).\nJoin Discord CloudHub untuk update!"
+})
