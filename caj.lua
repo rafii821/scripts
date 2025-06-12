@@ -1,24 +1,32 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Debug awal, pastikan script berjalan
+print("[CloudHub] Script dimulai...")
 
--- Create window
+local status, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end)
+
+if not status or not Rayfield then
+    warn("[CloudHub] Gagal load Rayfield library. Pastikan link aktif dan executor support!")
+    return
+end
+
+print("[CloudHub] Rayfield berhasil di-load")
+
 local Window = Rayfield:CreateWindow({
    Name = "🗼 Climb and Jump Tower 🗼",
    Icon = 0,
    LoadingTitle = "Climb And Jump Tower Script",
    LoadingSubtitle = "by 9Suoz",
    Theme = "Amethyst",
-
    ConfigurationSaving = {
       Enabled = true,
       FileName = "Cloud Hub"
    },
-
    Discord = {
       Enabled = true,
       Invite = "MaD2P69gSr",
       RememberJoins = true
    },
-
    KeySystem = false,
    KeySettings = {
       Title = "Key System",
@@ -31,6 +39,8 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
+print("[CloudHub] Window UI dibuat")
+
 -- Notification on script load
 Rayfield:Notify({
    Title = "Welcome Cloud Hub User!",
@@ -41,15 +51,14 @@ Rayfield:Notify({
 
 -- Main Tab Setup
 local MainTab = Window:CreateTab("Main🏠", nil)
-local Section = MainTab:CreateSection("Main")
-local Divider = MainTab:CreateDivider()
+MainTab:CreateSection("Main")
+MainTab:CreateDivider()
 
--- Teleport Tab Setup
+-- Teleport Tab
 local TeleportTab = Window:CreateTab("Teleport🏝️", nil)
-local Section = TeleportTab:CreateSection("Teleport To Other Island (Need Wins)")
-local Divider = TeleportTab:CreateDivider()
+TeleportTab:CreateSection("Teleport To Other Island (Need Wins)")
+TeleportTab:CreateDivider()
 
--- Function to create teleport buttons to different worlds
 local function createWorldButton(name, worldID)
    TeleportTab:CreateButton({
       Name = name,
@@ -60,19 +69,17 @@ local function createWorldButton(name, worldID)
    })
 end
 
--- Create world buttons for teleporting
 createWorldButton("World 1 🗼", 1)
 createWorldButton("World 2 🏙️", 2)
 createWorldButton("World 3 🌉", 3)
 createWorldButton("World 4 🕰️", 4)
 createWorldButton("World 5 🌵", 5)
 
--- Pets Tab Setup
+-- Pets Tab
 local PetsTab = Window:CreateTab("Pets🐶", nil)
-local Section = PetsTab:CreateSection("Pet Section")
-local Divider = PetsTab:CreateDivider()
+PetsTab:CreateSection("Pet Section")
+PetsTab:CreateDivider()
 
--- Equip Best Pets Button
 PetsTab:CreateButton({
    Name = "Equip Best",
    Callback = function()
@@ -81,7 +88,6 @@ PetsTab:CreateButton({
    end,
 })
 
--- Auto Eggs Dropdown (Coming Soon)
 PetsTab:CreateDropdown({
    Name = "Auto Eggs ( Coming Soon )",
    Options = {"Coming", "Soon"},
@@ -90,12 +96,11 @@ PetsTab:CreateDropdown({
    Callback = function(Options) end,
 })
 
--- Misc Tab Setup
+-- Misc Tab
 local MiscTab = Window:CreateTab("Misc🎲", nil)
-local Section = MiscTab:CreateSection("Misc")
-local Divider = MiscTab:CreateDivider()
+MiscTab:CreateSection("Misc")
+MiscTab:CreateDivider()
 
--- Paragraph for Testing
 MainTab:CreateParagraph({
    Title = "Working | Enjoy 💖",
    Content = "Automatically farms wins every second. Player jumps off every 1 minute But You Still Get Wins If You Don't Reach The Top"
@@ -106,18 +111,18 @@ MiscTab:CreateParagraph({
    Content = "https://discord.gg/aW8xuu3ukh"
 })
 
--- Auto Wins Toggle Setup
-local running = false -- Track the loop state
+-- ==============================
+-- AUTO WINS TOGGLE
+-- ==============================
+local running = false
 local lastJumpTime = 0
 local autoWinThread
 
--- PATCHED: Make sure autoWinThread stops if toggled off
 local function stopAutoWin()
-   running = false
+    running = false
 end
 
--- Auto Wins Toggle
-local Toggle = MainTab:CreateToggle({
+MainTab:CreateToggle({
    Name = "Auto Wins",
    CurrentValue = false,
    Flag = "Toggle1",
@@ -125,7 +130,10 @@ local Toggle = MainTab:CreateToggle({
    Callback = function(Value)
       if Value then
          running = true
-         lastJumpTime = tick() -- Reset jump timer when toggled on
+         lastJumpTime = tick()
+         if autoWinThread then
+             -- Tidak perlu, loop akan break sendiri karena flag running
+         end
          autoWinThread = task.spawn(function()
             while running do
                -- Auto setting
@@ -149,10 +157,9 @@ local Toggle = MainTab:CreateToggle({
                   local character = player.Character
                   if character and character:FindFirstChildOfClass("Humanoid") then
                      character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-                     lastJumpTime = tick() -- Update last jump time
+                     lastJumpTime = tick()
                   end
                end
-
                task.wait(1)
             end
          end)
@@ -162,62 +169,50 @@ local Toggle = MainTab:CreateToggle({
    end,
 })
 
--- =======================
--- AUTO FARM & OPEN EGG GUI (PATCHED)
--- =======================
-
+-- ==============================
+-- AUTO FARM & OPEN EGG (TERDEKAT)
+-- ==============================
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
-
 local player = Players.LocalPlayer
-
--- Parent GUI ke Rayfield window
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AutoFarmGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = game:GetService("CoreGui") -- Rayfield GUI juga parent di CoreGui
 
 -- Tab & Section untuk AutoFarm di Rayfield
 local AutoFarmTab = Window:CreateTab("AutoFarm💰", nil)
-local Section = AutoFarmTab:CreateSection("AutoFarm Money & Egg")
-local Divider = AutoFarmTab:CreateDivider()
+AutoFarmTab:CreateSection("AutoFarm Money & Egg")
+AutoFarmTab:CreateDivider()
 
--- Remote references
 local remoteEvent = ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteEvent")
 local drawHeroInvoke = ReplicatedStorage:WaitForChild("Tool"):WaitForChild("DrawUp"):WaitForChild("Msg"):WaitForChild("DrawHero")
 
--- Status flags
 local farmMoneyActive = false
 local openEggActive = false
 local farmMoneyCoroutine
 local openEggCoroutine
 
--- Fungsi farming uang (memanggil Remote dengan beberapa argumen)
 local function farmMoney()
     local args1 = {"\232\181\183\232\183\179", 14405.461171865463}
     local args2 = {"\232\181\183\232\183\179", 14400.405507802963}
     local args3 = {"\232\144\189\229\156\176"}
-
     remoteEvent:FireServer(unpack(args1))
     remoteEvent:FireServer(unpack(args2))
     remoteEvent:FireServer(unpack(args3))
 end
 
--- PATCHED: Cari Egg terdekat dari player
 local function getNearestEgg()
+    -- Ubah nama folder egg di workspace sesuai game kamu!
     local eggsFolder = Workspace:FindFirstChild("Eggs") or Workspace:FindFirstChild("Egg") or Workspace:FindFirstChild("EggModels")
     if not eggsFolder then return nil end
     local minDist, nearestEgg = math.huge, nil
     for _, egg in pairs(eggsFolder:GetChildren()) do
+        local pos = nil
         if egg:IsA("BasePart") then
-            local dist = (egg.Position - player.Character.HumanoidRootPart.Position).Magnitude
-            if dist < minDist then
-                minDist = dist
-                nearestEgg = egg
-            end
+            pos = egg.Position
         elseif egg:IsA("Model") and egg.PrimaryPart then
-            local dist = (egg.PrimaryPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+            pos = egg.PrimaryPart.Position
+        end
+        if pos then
+            local dist = (pos - player.Character.HumanoidRootPart.Position).Magnitude
             if dist < minDist then
                 minDist = dist
                 nearestEgg = egg
@@ -228,54 +223,49 @@ local function getNearestEgg()
 end
 
 local function getEggId(egg)
-    -- Coba ambil EggID dari Attribute, Value, atau gunakan Name (ganti sesuai struktur game kamu)
+    -- Cek attribute, value, atau name
     if not egg then return nil end
-    local id = nil
     if egg:GetAttribute("EggID") then
-        id = egg:GetAttribute("EggID")
+        return egg:GetAttribute("EggID")
     elseif egg:FindFirstChild("EggID") and egg.EggID.Value then
-        id = egg.EggID.Value
+        return egg.EggID.Value
     elseif tonumber(egg.Name) then
-        id = tonumber(egg.Name)
+        return tonumber(egg.Name)
     elseif egg.PrimaryPart and tonumber(egg.PrimaryPart.Name) then
-        id = tonumber(egg.PrimaryPart.Name)
+        return tonumber(egg.PrimaryPart.Name)
     end
-    return id
+    return nil
 end
 
--- Fungsi buka telur terdekat
 local function openEgg()
     local nearestEgg = getNearestEgg()
     if nearestEgg then
         local eggId = getEggId(nearestEgg)
         if not eggId then
-            warn("EggID tidak ditemukan pada egg terdekat. Gunakan nama atau attribute yang sesuai dengan game kamu.")
+            warn("[CloudHub] EggID tidak ditemukan pada egg terdekat. Cek struktur workspace/egg game kamu!")
             return
         end
-        -- Biasanya, remote event perlu dipanggil dulu sebelum invoke
         local args1 = {"\230\138\189\232\155\139\229\188\149\229\175\188\231\187\147\230\157\159"}
         remoteEvent:FireServer(unpack(args1))
-        -- Biasanya param kedua adalah jumlah buka (1 untuk single, 3/10 jika triple/open 10)
         local args2 = {eggId, 1}
         local success, err = pcall(function()
             drawHeroInvoke:InvokeServer(unpack(args2))
         end)
         if not success then
-            warn("InvokeServer gagal: "..tostring(err))
+            warn("[CloudHub] InvokeServer gagal: "..tostring(err))
         end
     else
-        warn("Egg terdekat tidak ditemukan")
+        warn("[CloudHub] Egg terdekat tidak ditemukan")
     end
 end
 
--- START/STOP coroutines
 local function startFarmMoney()
     if farmMoneyCoroutine then return end
     farmMoneyActive = true
     farmMoneyCoroutine = coroutine.create(function()
         while farmMoneyActive do
             farmMoney()
-            task.wait(0.33) -- 3x lebih cepat
+            task.wait(0.33)
         end
     end)
     coroutine.resume(farmMoneyCoroutine)
@@ -303,8 +293,7 @@ local function stopOpenEgg()
     openEggCoroutine = nil
 end
 
--- Buat tombol Rayfield di Tab AutoFarm
-local FarmMoneyToggle = AutoFarmTab:CreateToggle({
+AutoFarmTab:CreateToggle({
     Name = "Auto Farm Uang",
     CurrentValue = false,
     Flag = "FarmMoneyToggle",
@@ -318,7 +307,7 @@ local FarmMoneyToggle = AutoFarmTab:CreateToggle({
     end,
 })
 
-local OpenEggToggle = AutoFarmTab:CreateToggle({
+AutoFarmTab:CreateToggle({
     Name = "Auto Buka Telur (Egg Terdekat)",
     CurrentValue = false,
     Flag = "OpenEggToggle",
@@ -337,9 +326,4 @@ AutoFarmTab:CreateParagraph({
     Content = "Aktifkan toggle di atas untuk auto farm uang atau auto buka telur terdekat."
 })
 
--- OPTIONAL: Clean up coroutine ketika character died, agar tidak error
-player.CharacterAdded:Connect(function()
-    stopOpenEgg()
-    stopFarmMoney()
-    stopAutoWin()
-end)
+print("[CloudHub] Semua fitur siap. Jika tidak ada UI, periksa output log executor kamu!")
