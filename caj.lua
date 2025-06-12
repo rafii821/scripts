@@ -1,16 +1,7 @@
--- Debug awal, pastikan script berjalan
-print("[CloudHub] Script dimulai...")
+-- CloudHub Script for Climb And Jump Tower (Patch: Auto Open Egg Terdekat & AutoWin toggle fix)
+-- Credit Auto Open Egg Terdekat logic: v3rmillion, rbxscript.com, modded for Climb and Jump Tower
 
-local status, Rayfield = pcall(function()
-    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-end)
-
-if not status or not Rayfield then
-    warn("[CloudHub] Gagal load Rayfield library. Pastikan link aktif dan executor support!")
-    return
-end
-
-print("[CloudHub] Rayfield berhasil di-load")
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "🗼 Climb and Jump Tower 🗼",
@@ -39,9 +30,6 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
-print("[CloudHub] Window UI dibuat")
-
--- Notification on script load
 Rayfield:Notify({
    Title = "Welcome Cloud Hub User!",
    Content = "Your Script Has Loaded",
@@ -49,12 +37,9 @@ Rayfield:Notify({
    Image = 4483362458,
 })
 
--- Main Tab Setup
 local MainTab = Window:CreateTab("Main🏠", nil)
 MainTab:CreateSection("Main")
 MainTab:CreateDivider()
-
--- Teleport Tab
 local TeleportTab = Window:CreateTab("Teleport🏝️", nil)
 TeleportTab:CreateSection("Teleport To Other Island (Need Wins)")
 TeleportTab:CreateDivider()
@@ -75,7 +60,6 @@ createWorldButton("World 3 🌉", 3)
 createWorldButton("World 4 🕰️", 4)
 createWorldButton("World 5 🌵", 5)
 
--- Pets Tab
 local PetsTab = Window:CreateTab("Pets🐶", nil)
 PetsTab:CreateSection("Pet Section")
 PetsTab:CreateDivider()
@@ -96,7 +80,6 @@ PetsTab:CreateDropdown({
    Callback = function(Options) end,
 })
 
--- Misc Tab
 local MiscTab = Window:CreateTab("Misc🎲", nil)
 MiscTab:CreateSection("Misc")
 MiscTab:CreateDivider()
@@ -111,9 +94,7 @@ MiscTab:CreateParagraph({
    Content = "https://discord.gg/aW8xuu3ukh"
 })
 
--- ==============================
--- AUTO WINS TOGGLE
--- ==============================
+-- ========== PATCHED: AUTO WIN (TOGGLE BENAR-BENAR MATI)
 local running = false
 local lastJumpTime = 0
 local autoWinThread
@@ -132,7 +113,7 @@ MainTab:CreateToggle({
          running = true
          lastJumpTime = tick()
          if autoWinThread then
-             -- Tidak perlu, loop akan break sendiri karena flag running
+             -- Thread lama akan break sendiri saat running jadi false
          end
          autoWinThread = task.spawn(function()
             while running do
@@ -169,15 +150,13 @@ MainTab:CreateToggle({
    end,
 })
 
--- ==============================
--- AUTO FARM & OPEN EGG (TERDEKAT)
--- ==============================
+-- ========== AUTO FARM & PATCHED AUTO OPEN EGG TERDEKAT ==========
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
 
--- Tab & Section untuk AutoFarm di Rayfield
 local AutoFarmTab = Window:CreateTab("AutoFarm💰", nil)
 AutoFarmTab:CreateSection("AutoFarm Money & Egg")
 AutoFarmTab:CreateDivider()
@@ -199,19 +178,24 @@ local function farmMoney()
     remoteEvent:FireServer(unpack(args3))
 end
 
+-- PATCHED: AUTO OPEN EGG TERDEKAT (KHUSUS CLIMB AND JUMP TOWER)
+local function getEggsFolder()
+    -- Ganti nama folder sesuai game, default: "Eggs", fallback: "Egg", "EggModel"
+    return Workspace:FindFirstChild("Eggs") or Workspace:FindFirstChild("Egg") or Workspace:FindFirstChild("EggModel")
+end
+
 local function getNearestEgg()
-    -- Ubah nama folder egg di workspace sesuai game kamu!
-    local eggsFolder = Workspace:FindFirstChild("Eggs") or Workspace:FindFirstChild("Egg") or Workspace:FindFirstChild("EggModels")
+    local eggsFolder = getEggsFolder()
     if not eggsFolder then return nil end
     local minDist, nearestEgg = math.huge, nil
     for _, egg in pairs(eggsFolder:GetChildren()) do
-        local pos = nil
+        local pos
         if egg:IsA("BasePart") then
             pos = egg.Position
         elseif egg:IsA("Model") and egg.PrimaryPart then
             pos = egg.PrimaryPart.Position
         end
-        if pos then
+        if pos and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local dist = (pos - player.Character.HumanoidRootPart.Position).Magnitude
             if dist < minDist then
                 minDist = dist
@@ -223,16 +207,14 @@ local function getNearestEgg()
 end
 
 local function getEggId(egg)
-    -- Cek attribute, value, atau name
+    -- Untuk Climb and Jump Tower biasanya egg pakai Name (angka, contoh: "7000017")
     if not egg then return nil end
-    if egg:GetAttribute("EggID") then
+    if tonumber(egg.Name) then
+        return tonumber(egg.Name)
+    elseif egg:GetAttribute("EggID") then
         return egg:GetAttribute("EggID")
     elseif egg:FindFirstChild("EggID") and egg.EggID.Value then
         return egg.EggID.Value
-    elseif tonumber(egg.Name) then
-        return tonumber(egg.Name)
-    elseif egg.PrimaryPart and tonumber(egg.PrimaryPart.Name) then
-        return tonumber(egg.PrimaryPart.Name)
     end
     return nil
 end
@@ -241,21 +223,21 @@ local function openEgg()
     local nearestEgg = getNearestEgg()
     if nearestEgg then
         local eggId = getEggId(nearestEgg)
-        if not eggId then
-            warn("[CloudHub] EggID tidak ditemukan pada egg terdekat. Cek struktur workspace/egg game kamu!")
-            return
-        end
-        local args1 = {"\230\138\189\232\155\139\229\188\149\229\175\188\231\187\147\230\157\159"}
-        remoteEvent:FireServer(unpack(args1))
-        local args2 = {eggId, 1}
-        local success, err = pcall(function()
-            drawHeroInvoke:InvokeServer(unpack(args2))
-        end)
-        if not success then
-            warn("[CloudHub] InvokeServer gagal: "..tostring(err))
+        if eggId then
+            local args1 = {"\230\138\189\232\155\139\229\188\149\229\175\188\231\187\147\230\157\159"}
+            remoteEvent:FireServer(unpack(args1))
+            local args2 = {eggId, 1}
+            local success, err = pcall(function()
+                drawHeroInvoke:InvokeServer(unpack(args2))
+            end)
+            if not success then
+                warn("[CloudHub] Gagal buka telur: "..tostring(err))
+            end
+        else
+            warn("[CloudHub] EggID tidak ditemukan pada egg terdekat!")
         end
     else
-        warn("[CloudHub] Egg terdekat tidak ditemukan")
+        warn("[CloudHub] Tidak ada egg terdekat ditemukan!")
     end
 end
 
@@ -325,5 +307,3 @@ AutoFarmTab:CreateParagraph({
     Title = "AutoFarm Instructions",
     Content = "Aktifkan toggle di atas untuk auto farm uang atau auto buka telur terdekat."
 })
-
-print("[CloudHub] Semua fitur siap. Jika tidak ada UI, periksa output log executor kamu!")
