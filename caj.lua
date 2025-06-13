@@ -196,7 +196,7 @@ local Divider = MiscTab:CreateDivider()
 -- Paragraf untuk Testing
 MainTab:CreateParagraph({
    Title = "Berfungsi | Selamat Menikmati 💖",
-   Content = "Otomatis farming kemenangan setiap detik. Pemain akan melompat setiap 1 menit, tapi kamu tetap mendapat kemenangan jika tidak mencapai puncak."
+   Content = "Otomatis farming kemenangan berdasarkan tinggi. Pemain akan melompat otomatis jika melewati threshold yang ditentukan."
 })
 
 MiscTab:CreateParagraph({
@@ -206,20 +206,19 @@ MiscTab:CreateParagraph({
 
 -- Pengaturan Auto Wins Toggle
 local running = false -- Status loop
-local lastJumpTime = 0
 local autoWinThread
+local jumpHeightThreshold = 100 -- Ganti sesuai kebutuhanmu, misal: 100, 150, dst
 
 -- Toggle Auto Wins
 MainTab:CreateToggle({
    Name = "Auto Menang",
    CurrentValue = false,
    Flag = "Toggle1",
-   Description = "Otomatis farming kemenangan setiap detik. Pemain melompat setiap 1 menit.",
+   Description = "Otomatis farming kemenangan berdasarkan tinggi. Pemain melompat otomatis jika melewati threshold.",
    Callback = function(Value)
       running = Value
 
       if running then
-         lastJumpTime = tick() -- Reset waktu lompat saat diaktifkan
          autoWinThread = task.spawn(function()
             while running do
                -- Pengaturan otomatis
@@ -237,13 +236,14 @@ MainTab:CreateToggle({
                game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args3))
                wait()
 
-               -- Lompat setiap 20 detik
-               if tick() - lastJumpTime >= 20 then
-                  local player = game:GetService("Players").LocalPlayer
-                  local character = player.Character
-                  if character and character:FindFirstChildOfClass("Humanoid") then
+               -- Lompat berdasarkan tinggi
+               local player = game:GetService("Players").LocalPlayer
+               local character = player.Character
+               if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildOfClass("Humanoid") then
+                  local height = character.HumanoidRootPart.Position.Y
+                  if height >= jumpHeightThreshold then
                      character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-                     lastJumpTime = tick() -- Update waktu lompat terakhir
+                     wait(0.2)
                   end
                end
 
