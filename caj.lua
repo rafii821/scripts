@@ -14,7 +14,7 @@ local player = Players.LocalPlayer
 -- Tunggu PlayerGui ready!
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Pastikan RemoteEvent ada (jika error di sini, pastikan nama benar di Explorer!)
+-- Pastikan RemoteEvent ada
 local remoteEvent = ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteEvent")
 local drawHeroInvoke = ReplicatedStorage:WaitForChild("Tool"):WaitForChild("DrawUp"):WaitForChild("Msg"):WaitForChild("DrawHero")
 local respawnEvent = ReplicatedStorage:WaitForChild("RespawnEvent")
@@ -23,7 +23,7 @@ local respawnEvent = ReplicatedStorage:WaitForChild("RespawnEvent")
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AutoFarmWinGui"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui -- WAJIB PARENT KE PlayerGui
+screenGui.Parent = playerGui
 
 local function createButton(name, text, position)
     local btn = Instance.new("TextButton")
@@ -31,7 +31,7 @@ local function createButton(name, text, position)
     btn.Size = UDim2.new(0, 160, 0, 42)
     btn.Position = position
     btn.BackgroundColor3 = Color3.fromRGB(43, 168, 255)
-    btn.TextColor3 = Color3.new(1,1,1)
+    btn.TextColor3 = Color3.new(1, 1, 1)
     btn.Font = Enum.Font.SourceSansBold
     btn.TextScaled = true
     btn.Text = text
@@ -39,9 +39,9 @@ local function createButton(name, text, position)
     return btn
 end
 
-local farmMoneyBtn = createButton("FarmMoney", "Aktifkan Farm Uang", UDim2.new(0,10,0,10))
-local openEggBtn = createButton("OpenEgg", "Buka Telur Otomatis", UDim2.new(0,180,0,10))
-local autoWinBtn = createButton("AutoWin", "Aktifkan Auto Win", UDim2.new(0,350,0,10))
+local farmMoneyBtn = createButton("FarmMoney", "Aktifkan Farm Uang", UDim2.new(0, 10, 0, 10))
+local openEggBtn = createButton("OpenEgg", "Buka Telur Otomatis", UDim2.new(0, 180, 0, 10))
+local autoWinBtn = createButton("AutoWin", "Aktifkan Auto Win", UDim2.new(0, 350, 0, 10))
 
 -- ==== FLAGS ====
 local farmMoneyActive = false
