@@ -238,7 +238,7 @@ MainTab:CreateToggle({
                wait()
 
                -- Lompat setiap 20 detik
-               if tick() - lastJumpTime >= 20 then
+               if tick() - lastJumpTime >= 25 then
                   local player = game:GetService("Players").LocalPlayer
                   local character = player.Character
                   if character and character:FindFirstChildOfClass("Humanoid") then
