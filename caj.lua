@@ -196,7 +196,7 @@ local Divider = MiscTab:CreateDivider()
 -- Paragraf untuk Testing
 MainTab:CreateParagraph({
    Title = "Berfungsi | Selamat Menikmati 💖",
-   Content = "Otomatis farming kemenangan dan lompat setiap selesai klaim win."
+   Content = "Otomatis farming kemenangan setiap detik. Pemain akan melompat setiap 1 menit, tapi kamu tetap mendapat kemenangan jika tidak mencapai puncak."
 })
 
 MiscTab:CreateParagraph({
@@ -205,14 +205,15 @@ MiscTab:CreateParagraph({
 })
 
 -- Pengaturan Auto Wins Toggle
-local running = false
+local running = false -- Status loop
 local autoWinThread
 
+-- Toggle Auto Wins (PATCHED: Lompat hanya setelah menang, bukan berdasarkan waktu)
 MainTab:CreateToggle({
    Name = "Auto Menang",
    CurrentValue = false,
    Flag = "Toggle1",
-   Description = "Otomatis farming kemenangan dan lompat setiap selesai klaim win.",
+   Description = "Otomatis farming kemenangan setiap detik. Pemain melompat setiap sesudah menang.",
    Callback = function(Value)
       running = Value
 
@@ -234,12 +235,12 @@ MainTab:CreateToggle({
                game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args3))
                wait()
 
-               -- Lompat langsung setelah klaim win
+               -- Langsung lompat setelah menang, tidak spam jika masih di udara
                local player = game:GetService("Players").LocalPlayer
                local character = player.Character
-               if character and character:FindFirstChildOfClass("Humanoid") then
-                  character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-                  wait(0.2)
+               local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+               if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Jumping then
+                  humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                end
 
                wait(1)
@@ -247,6 +248,7 @@ MainTab:CreateToggle({
          end)
       else
          running = false
+         -- Berhenti loop
       end
    end,
 })
