@@ -71,6 +71,8 @@ local function farmMoney()
     remoteEvent:FireServer(unpack(args1))
     remoteEvent:FireServer(unpack(args2))
     remoteEvent:FireServer(unpack(args3))
+
+    return 14405.461171865463 -- Kembalikan tinggi yang digunakan untuk menang
 end
 
 -- Fungsi open egg (membuka telur)
@@ -206,48 +208,37 @@ MiscTab:CreateParagraph({
 
 -- Pengaturan Auto Wins Toggle
 local running = false -- Status loop
-local lastJumpTime = 0
 local autoWinThread
+local targetHeight = farmMoney() -- Ambil tinggi dari fungsi farmMoney
 
 -- Toggle Auto Wins
 MainTab:CreateToggle({
    Name = "Auto Menang",
    CurrentValue = false,
    Flag = "Toggle1",
-   Description = "Otomatis farming kemenangan setiap detik. Pemain melompat setiap 1 menit.",
+   Description = "Otomatis menang saat mencapai tinggi tertentu.",
    Callback = function(Value)
       running = Value
 
       if running then
-         lastJumpTime = tick() -- Reset waktu lompat saat diaktifkan
          autoWinThread = task.spawn(function()
             while running do
-               -- Pengaturan otomatis
-               local args1 = { "isAutoOn", 1 }
-               game:GetService("ReplicatedStorage"):WaitForChild("ServerMsg"):WaitForChild("Setting"):InvokeServer(unpack(args1))
-               wait()
+               local player = game:GetService("Players").LocalPlayer
+               local character = player.Character
 
-               -- Kirim event dengan nilai
-               local args2 = { "\232\181\183\232\183\179", 14400.854642152786 }
-               game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args2))
-               wait()
+               if character then
+                  local height = character.PrimaryPart.Position.Y -- Mendapatkan tinggi pemain
 
-               -- Kirim perintah menang
-               local args3 = { "\233\162\134\229\143\150\230\165\188\233\161\182wins" }
-               game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args3))
-               wait()
-
-               -- Lompat setiap 20 detik
-               if tick() - lastJumpTime >= 20 then
-                  local player = game:GetService("Players").LocalPlayer
-                  local character = player.Character
-                  if character and character:FindFirstChildOfClass("Humanoid") then
-                     character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-                     lastJumpTime = tick() -- Update waktu lompat terakhir
+                  -- Cek apakah tinggi pemain sudah mencapai target
+                  if height >= targetHeight then 
+                     -- Kirim perintah menang
+                     local args3 = { "\233\162\134\229\143\150\230\165\188\233\161\182wins" }
+                     game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args3))
+                     break -- Keluar dari loop setelah menang
                   end
                end
 
-               wait(1)
+               wait(1) -- Tunggu sebelum memeriksa lagi
             end
          end)
       else
