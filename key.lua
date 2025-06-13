@@ -20,7 +20,7 @@ local scriptURLs = {
     [94682676231618] = "https://raw.githubusercontent.com/gumanba/Scripts/16704d0733464c4b0de11124f549a9d724873831/MyFishingPier",
     [3398014311] = "https://raw.githubusercontent.com/rafii821/scripts/refs/heads/main/rt2.lua",
     [87419805032513] = "https://raw.githubusercontent.com/rafii821/scripts/refs/heads/main/rotube.lua",
-    [123921593837160] = "https://raw.githubusercontent.com/gumanba/Scripts/main/ClimbandJump",
+    [123921593837160] = "https://raw.githubusercontent.com/rafii821/scripts/refs/heads/main/caj.lua",
 
 -- ... [rest of your script URLs remain the same]
 }
