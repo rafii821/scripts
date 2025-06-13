@@ -42,7 +42,6 @@ Rayfield:Notify({
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local player = Players.LocalPlayer
 
 -- Referensi remote
@@ -196,7 +195,7 @@ local Divider = MiscTab:CreateDivider()
 -- Paragraf untuk Testing
 MainTab:CreateParagraph({
    Title = "Berfungsi | Selamat Menikmati 💖",
-   Content = "Otomatis farming kemenangan setiap detik. Pemain akan melompat setiap 1 menit, tapi kamu tetap mendapat kemenangan jika tidak mencapai puncak."
+   Content = "Otomatis farming kemenangan setiap detik. Pemain akan melompat setiap detik yang kamu atur, tapi kamu tetap mendapat kemenangan jika tidak mencapai puncak."
 })
 
 MiscTab:CreateParagraph({
@@ -204,20 +203,39 @@ MiscTab:CreateParagraph({
    Content = "https://discord.gg/aW8xuu3ukh"
 })
 
+-- === Pengaturan Auto Wins Timer ===
+local SettingTab = Window:CreateTab("Settings⚙️", nil)
+local Section = SettingTab:CreateSection("Pengaturan Auto Menang")
+
+local jumpInterval = 20 -- default 20 detik
+SettingTab:CreateSlider({
+   Name = "Interval Lompat (detik)",
+   Range = {1, 120},
+   Increment = 1,
+   Suffix = "detik",
+   CurrentValue = jumpInterval,
+   Flag = "JumpInterval",
+   Callback = function(Value)
+      jumpInterval = Value
+   end,
+})
+
 -- Pengaturan Auto Wins Toggle
 local running = false -- Status loop
+local lastJumpTime = 0
 local autoWinThread
 
--- Toggle Auto Wins (PATCHED: Lompat hanya setelah menang, bukan berdasarkan waktu)
+-- Toggle Auto Wins
 MainTab:CreateToggle({
    Name = "Auto Menang",
    CurrentValue = false,
    Flag = "Toggle1",
-   Description = "Otomatis farming kemenangan setiap detik. Pemain melompat setiap sesudah menang.",
+   Description = "Otomatis farming kemenangan setiap detik. Pemain melompat setiap interval yang kamu atur.",
    Callback = function(Value)
       running = Value
 
       if running then
+         lastJumpTime = tick() -- Reset waktu lompat saat diaktifkan
          autoWinThread = task.spawn(function()
             while running do
                -- Pengaturan otomatis
@@ -235,12 +253,14 @@ MainTab:CreateToggle({
                game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args3))
                wait()
 
-               -- Langsung lompat setelah menang, tidak spam jika masih di udara
-               local player = game:GetService("Players").LocalPlayer
-               local character = player.Character
-               local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-               if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Jumping then
-                  humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+               -- Lompat setiap interval detik (dari slider)
+               if tick() - lastJumpTime >= jumpInterval then
+                  local player = game:GetService("Players").LocalPlayer
+                  local character = player.Character
+                  if character and character:FindFirstChildOfClass("Humanoid") then
+                     character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+                     lastJumpTime = tick() -- Update waktu lompat terakhir
+                  end
                end
 
                wait(1)
