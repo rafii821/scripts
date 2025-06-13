@@ -1,18 +1,3 @@
-
-The user asks to also allow "auto win" functionality to use height (ketinggian) instead of just relying on time-based jumps every 60 seconds. The current "auto win" code triggers a jump every 60 seconds and fires some remote events with a hardcoded height value (like 14400.854642152786). The user wants to add a GUI element to set the height value dynamically for auto win as well, similar to how farming height was added.
-
-Plan:
-- Add a new slider input in the GUI for "Auto Win Height".
-- Store the value in a variable (e.g. autoWinHeight).
-- Update the auto win coroutine to send the height from that variable instead of a hardcoded number.
-- Optionally, modify the jump logic to trigger jump based on height or together with time. But since the user just said "pakai ketinggian juga" meaning using height also, I assume primarily update the heights sent in remote events and keep jump logic. Possibly allow the jump timing unchanged or optionally add height-based conditional jump if needed.
-- Keep consistent code style with the previous slider for farm height.
-
-Next, I will produce the updated full code snippet including the new slider and updated auto win function accordingly.
-
-
-`ClimbAndJumpTowerScript.lua`
-```lua
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Create window
@@ -328,5 +313,3 @@ AutoFarmTab:CreateParagraph({
     Title = "AutoFarm Instructions",
     Content = "Aktifkan toggle di atas untuk auto farm uang atau auto buka telur."
 })
-
-```
