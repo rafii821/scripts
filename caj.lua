@@ -196,7 +196,7 @@ local Divider = MiscTab:CreateDivider()
 -- Paragraf untuk Testing
 MainTab:CreateParagraph({
    Title = "Berfungsi | Selamat Menikmati 💖",
-   Content = "Otomatis farming kemenangan berdasarkan tinggi. Pemain akan melompat otomatis jika melewati threshold yang ditentukan."
+   Content = "Otomatis farming kemenangan dan lompat setiap selesai klaim win."
 })
 
 MiscTab:CreateParagraph({
@@ -205,16 +205,14 @@ MiscTab:CreateParagraph({
 })
 
 -- Pengaturan Auto Wins Toggle
-local running = false -- Status loop
+local running = false
 local autoWinThread
-local jumpHeightThreshold = 100 -- Ganti sesuai kebutuhanmu, misal: 100, 150, dst
 
--- Toggle Auto Wins
 MainTab:CreateToggle({
    Name = "Auto Menang",
    CurrentValue = false,
    Flag = "Toggle1",
-   Description = "Otomatis farming kemenangan berdasarkan tinggi. Pemain melompat otomatis jika melewati threshold.",
+   Description = "Otomatis farming kemenangan dan lompat setiap selesai klaim win.",
    Callback = function(Value)
       running = Value
 
@@ -236,15 +234,12 @@ MainTab:CreateToggle({
                game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args3))
                wait()
 
-               -- Lompat berdasarkan tinggi
+               -- Lompat langsung setelah klaim win
                local player = game:GetService("Players").LocalPlayer
                local character = player.Character
-               if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildOfClass("Humanoid") then
-                  local height = character.HumanoidRootPart.Position.Y
-                  if height >= jumpHeightThreshold then
-                     character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-                     wait(0.2)
-                  end
+               if character and character:FindFirstChildOfClass("Humanoid") then
+                  character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+                  wait(0.2)
                end
 
                wait(1)
@@ -252,7 +247,6 @@ MainTab:CreateToggle({
          end)
       else
          running = false
-         -- Berhenti loop
       end
    end,
 })
