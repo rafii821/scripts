@@ -1,43 +1,40 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "🗼 Climb and Jump Tower 🗼",
-   LoadingTitle = "Climb And Jump Tower Script",
-   LoadingSubtitle = "by 9Suoz",
-   Theme = "Amethyst",
-   ConfigurationSaving = {
-      Enabled = true,
-      FileName = "Cloud Hub"
-   },
-   Discord = {
-      Enabled = true,
-      Invite = "MaD2P69gSr",
-      RememberJoins = true
-   },
-   KeySystem = false,
+    Name = "🗼 Climb and Jump Tower 🗼",
+    LoadingTitle = "Climb And Jump Tower Script",
+    LoadingSubtitle = "by 9Suoz",
+    Theme = "Amethyst",
+    ConfigurationSaving = {
+        Enabled = true,
+        FileName = "Cloud Hub"
+    },
+    Discord = {
+        Enabled = true,
+        Invite = "MaD2P69gSr",
+        RememberJoins = true
+    },
+    KeySystem = false,
 })
 
--- Membuat Tab AutoFarm
 local AutoFarmTab = Window:CreateTab("AutoFarm💰", nil)
 
--- Membuat Section di dalam tab AutoFarm
+-- Buat satu section utama di tab AutoFarm
 AutoFarmTab:CreateSection("AutoFarm Money & Egg")
 
--- Variable status
-local farmMoneyActive = false
-local openEggActive = false
-local autoWinActive = false
-
+-- Variabel default
 local farmHeight = 14405.45
 local autoWinHeight = 14400.85
+local farmMoneyActive, openEggActive, autoWinActive = false, false, false
+local farmMoneyCoroutine, openEggCoroutine, autoWinCoroutine
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
+
 local remoteEvent = ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteEvent")
 local drawHeroInvoke = ReplicatedStorage:WaitForChild("Tool"):WaitForChild("DrawUp"):WaitForChild("Msg"):WaitForChild("DrawHero")
 
--- Fungsi farming uang
 local function farmMoney()
     local args1 = {"\232\181\183\232\183\179", farmHeight + 5}
     local args2 = {"\232\181\183\232\183\179", farmHeight}
@@ -48,18 +45,19 @@ local function farmMoney()
     remoteEvent:FireServer(unpack(args3))
 end
 
--- Fungsi buka telur
 local function openEgg()
     local args1 = {"\230\138\189\232\155\139\229\188\149\229\175\188\231\187\147\230\157\159"}
     remoteEvent:FireServer(unpack(args1))
 
     local args2 = {7000017, 10}
-    pcall(function()
+    local success, err = pcall(function()
         drawHeroInvoke:InvokeServer(unpack(args2))
     end)
+    if not success then
+        warn("InvokeServer gagal: " .. tostring(err))
+    end
 end
 
--- Auto win function
 local function autoWin()
     local lastJumpTime = tick()
     while autoWinActive do
@@ -80,11 +78,6 @@ local function autoWin()
     end
 end
 
--- Coroutines handler
-local farmMoneyCoroutine = nil
-local openEggCoroutine = nil
-local autoWinCoroutine = nil
-
 local function startFarmMoney()
     if farmMoneyCoroutine then return end
     farmMoneyActive = true
@@ -101,7 +94,6 @@ local function stopFarmMoney()
     farmMoneyActive = false
     farmMoneyCoroutine = nil
 end
-
 
 local function startOpenEgg()
     if openEggCoroutine then return end
@@ -132,7 +124,7 @@ local function stopAutoWin()
     autoWinCoroutine = nil
 end
 
--- Buat Slider ketinggian farm
+-- Buat slider ketinggian farming
 AutoFarmTab:CreateSlider({
     Name = "Farming Height",
     Min = 14000,
@@ -146,7 +138,7 @@ AutoFarmTab:CreateSlider({
     end,
 })
 
--- Buat Slider ketinggian auto win
+-- Buat slider ketinggian auto win
 AutoFarmTab:CreateSlider({
     Name = "Auto Win Height",
     Min = 14000,
@@ -195,7 +187,7 @@ AutoFarmTab:CreateToggle({
     Name = "Auto Win",
     CurrentValue = false,
     Flag = "AutoWinToggle",
-    Description = "Otomatis menang dan loncat setiap 60 detik menggunakan ketinggian setting.",
+    Description = "Otomatis menang dan loncat setiap 60 detik dengan ketinggian setting.",
     Callback = function(value)
         if value then
             startAutoWin()
@@ -205,7 +197,7 @@ AutoFarmTab:CreateToggle({
     end,
 })
 
--- Instruction paragraph
+-- Paragraph instruksi
 AutoFarmTab:CreateParagraph({
     Title = "AutoFarm Instructions",
     Content = "Aktifkan toggle di atas untuk auto farm uang, buka telur, atau auto win."
