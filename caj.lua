@@ -7,15 +7,18 @@ local Window = Rayfield:CreateWindow({
    LoadingTitle = "Climb And Jump Tower Script",
    LoadingSubtitle = "by 9Suoz",
    Theme = "Amethyst",
+
    ConfigurationSaving = {
       Enabled = true,
       FileName = "Cloud Hub"
    },
+
    Discord = {
       Enabled = true,
       Invite = "MaD2P69gSr",
       RememberJoins = true
    },
+
    KeySystem = false,
    KeySettings = {
       Title = "Key System",
@@ -38,15 +41,25 @@ Rayfield:Notify({
 
 -- Main Tab Setup
 local MainTab = Window:CreateTab("Main🏠", nil)
-local Section = MainTab:CreateSection("Main")
-local Divider = MainTab:CreateDivider()
+MainTab:CreateSection("Main Section")
+MainTab:CreateDivider()
 
 -- Teleport Tab Setup
 local TeleportTab = Window:CreateTab("Teleport🏝️", nil)
-local Section = TeleportTab:CreateSection("Teleport To Other Island (Need Wins)")
-local Divider = TeleportTab:CreateDivider()
+TeleportTab:CreateSection("Teleport To Other Island (Need Wins)")
+TeleportTab:CreateDivider()
 
--- Function to create teleport buttons to different worlds
+-- Pets Tab Setup
+local PetsTab = Window:CreateTab("Pets🐶", nil)
+PetsTab:CreateSection("Pet Section")
+PetsTab:CreateDivider()
+
+-- Misc Tab Setup
+local MiscTab = Window:CreateTab("Misc🎲", nil)
+MiscTab:CreateSection("Miscellaneous")
+MiscTab:CreateDivider()
+
+-- Create world teleport buttons
 local function createWorldButton(name, worldID)
    TeleportTab:CreateButton({
       Name = name,
@@ -57,17 +70,11 @@ local function createWorldButton(name, worldID)
    })
 end
 
--- Create world buttons for teleporting
 createWorldButton("World 1 🗼", 1)
 createWorldButton("World 2 🏙️", 2)
 createWorldButton("World 3 🌉", 3)
 createWorldButton("World 4 🕰️", 4)
 createWorldButton("World 5 🌵", 5)
-
--- Pets Tab Setup
-local PetsTab = Window:CreateTab("Pets🐶", nil)
-local Section = PetsTab:CreateSection("Pet Section")
-local Divider = PetsTab:CreateDivider()
 
 -- Equip Best Pets Button
 PetsTab:CreateButton({
@@ -82,229 +89,215 @@ PetsTab:CreateButton({
 PetsTab:CreateDropdown({
    Name = "Auto Eggs ( Coming Soon )",
    Options = {"Coming", "Soon"},
-   CurrentOption = {"Option 1"},
+   CurrentOption = "Coming",
    Flag = "Dropdown1",
-   Callback = function(Options) end,
+   Callback = function(value) end,
 })
 
--- Misc Tab Setup
-local MiscTab = Window:CreateTab("Misc🎲", nil)
-local Section = MiscTab:CreateSection("Misc")
-local Divider = MiscTab:CreateDivider()
-
--- Paragraph for Testing
+-- Paragraphs
 MainTab:CreateParagraph({
-   Title = "Working | Enjoy 💖",
-   Content = "Automatically farms wins every second. Player jumps off every 1 minute But You Still Get Wins If You Don't Reach The Top"
+   Title = "Working | Enjoy",
+   Content = "Automatically farms wins every second. Player jumps off every 1 minute but you still get wins if you don't reach the top."
 })
 
 MiscTab:CreateParagraph({
-   Title = "Join Our Community For Future Updates 💪",
+   Title = "Join Our Community For Future Updates",
    Content = "https://discord.gg/aW8xuu3ukh"
 })
 
--- =======================
--- AUTO FARM & OPEN EGG GUI (INDONESIA)
--- =======================
-
+-- Services and player reference
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local player = Players.LocalPlayer
-
--- Parent GUI ke Rayfield window
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AutoFarmGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = game:GetService("CoreGui")
-
--- Tab & Section untuk AutoFarm di Rayfield
-local AutoFarmTab = Window:CreateTab("AutoFarm💰", nil)
-local Section = AutoFarmTab:CreateSection("AutoFarm Money & Egg")
-local Divider = AutoFarmTab:CreateDivider()
 
 -- Remote references
 local remoteEvent = ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteEvent")
 local drawHeroInvoke = ReplicatedStorage:WaitForChild("Tool"):WaitForChild("DrawUp"):WaitForChild("Msg"):WaitForChild("DrawHero")
 
--- Status flags and coroutines
+-- AutoFarm Tab and Section
+local AutoFarmTab = Window:CreateTab("AutoFarm💰", nil)
+AutoFarmTab:CreateSection("AutoFarm Money & Egg")
+AutoFarmTab:CreateDivider()
+
+-- Variables and coroutine handles
 local farmMoneyActive = false
 local openEggActive = false
+local autoWinActive = false
+
 local farmMoneyCoroutine
 local openEggCoroutine
-local autoWinActive = false
 local autoWinCoroutine
 
--- Heights with defaults for farming and auto win
+-- Numeric values for heights with default values
 local farmHeight = 14405.45
 local autoWinHeight = 14400.85
 
--- GUI slider for farming height
+-- Slider for Farming Height
 AutoFarmTab:CreateSlider({
-    Name = "Farming Height",
-    Min = 14000,
-    Max = 14600,
-    Increment = 1,
-    Suffix = " Height",
-    CurrentValue = farmHeight,
-    Flag = "FarmHeightSlider",
-    Callback = function(Value)
-        farmHeight = Value
-    end,
+   Name = "Farming Height",
+   Min = 14000,
+   Max = 14600,
+   Increment = 1,
+   Suffix = " Height",
+   CurrentValue = farmHeight,
+   Flag = "FarmHeightSlider",
+   Callback = function(Value)
+      farmHeight = Value
+   end,
 })
 
--- GUI slider for auto win height
+-- Slider for Auto Win Height
 AutoFarmTab:CreateSlider({
-    Name = "Auto Win Height",
-    Min = 14000,
-    Max = 14600,
-    Increment = 1,
-    Suffix = " Height",
-    CurrentValue = autoWinHeight,
-    Flag = "AutoWinHeightSlider",
-    Callback = function(Value)
-        autoWinHeight = Value
-    end,
+   Name = "Auto Win Height",
+   Min = 14000,
+   Max = 14600,
+   Increment = 1,
+   Suffix = " Height",
+   CurrentValue = autoWinHeight,
+   Flag = "AutoWinHeightSlider",
+   Callback = function(Value)
+      autoWinHeight = Value
+   end,
 })
 
--- Fungsi farming uang (menggunakan farmHeight dari slider)
+-- Farming money function uses farmHeight from slider
 local function farmMoney()
-    local args1 = {"\232\181\183\232\183\179", farmHeight + 5}
-    local args2 = {"\232\181\183\232\183\179", farmHeight}
-    local args3 = {"\232\144\189\229\156\176"}
+   local args1 = {"\232\181\183\232\183\179", farmHeight + 5}
+   local args2 = {"\232\181\183\232\183\179", farmHeight}
+   local args3 = {"\232\144\189\229\156\176"}
 
-    remoteEvent:FireServer(unpack(args1))
-    remoteEvent:FireServer(unpack(args2))
-    remoteEvent:FireServer(unpack(args3))
+   remoteEvent:FireServer(unpack(args1))
+   remoteEvent:FireServer(unpack(args2))
+   remoteEvent:FireServer(unpack(args3))
 end
 
--- Fungsi membuka telur
+-- Open egg function
 local function openEgg()
-    local args1 = {"\230\138\189\232\155\139\229\188\149\229\175\188\231\187\147\230\157\159"}
-    remoteEvent:FireServer(unpack(args1))
+   local args1 = {"\230\138\189\232\155\139\229\188\149\229\175\188\231\187\147\230\157\159"}
+   remoteEvent:FireServer(unpack(args1))
 
-    local args2 = {7000017, 10}
-    local success, err = pcall(function()
-        drawHeroInvoke:InvokeServer(unpack(args2))
-    end)
-    if not success then
-        warn("InvokeServer gagal: " .. tostring(err))
-    end
+   local args2 = {7000017, 10}
+   local success, err = pcall(function()
+      drawHeroInvoke:InvokeServer(unpack(args2))
+   end)
+   if not success then
+      warn("InvokeServer failed: " .. tostring(err))
+   end
 end
 
--- Fungsi auto win (menggunakan autoWinHeight dari slider dan jump setiap 60 detik)
+-- Auto Win function uses autoWinHeight from slider and jumps every 60 seconds
 local function autoWin()
-    local lastJumpTime = tick()
-    while autoWinActive do
-        local args2 = {"\232\181\183\232\183\179", autoWinHeight}
-        remoteEvent:FireServer(unpack(args2))
-        local args3 = {"\233\162\134\229\143\150\230\165\188\233\161\182wins"}
-        remoteEvent:FireServer(unpack(args3))
-        if tick() - lastJumpTime >= 60 then
-            local character = player.Character
-            if character and character:FindFirstChildOfClass("Humanoid") then
-                character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-            lastJumpTime = tick()
-        end
-        wait(1)
-    end
+   local lastJumpTime = tick()
+   while autoWinActive do
+      local args2 = {"\232\181\183\232\183\179", autoWinHeight}
+      remoteEvent:FireServer(unpack(args2))
+      local args3 = {"\233\162\134\229\143\150\230\165\188\233\161\182wins"}
+      remoteEvent:FireServer(unpack(args3))
+      if tick() - lastJumpTime >= 60 then
+         local character = player.Character
+         if character and character:FindFirstChildOfClass("Humanoid") then
+            character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+         end
+         lastJumpTime = tick()
+      end
+      wait(1)
+   end
 end
 
--- Start/stop farming uang
+-- Start / Stop Farm Money coroutine
 local function startFarmMoney()
-    if farmMoneyCoroutine then return end
-    farmMoneyActive = true
-    farmMoneyCoroutine = coroutine.create(function()
-        while farmMoneyActive do
-            farmMoney()
-            wait(0.33)
-        end
-    end)
-    coroutine.resume(farmMoneyCoroutine)
+   if farmMoneyCoroutine then return end
+   farmMoneyActive = true
+   farmMoneyCoroutine = coroutine.create(function()
+      while farmMoneyActive do
+         farmMoney()
+         wait(0.33)
+      end
+   end)
+   coroutine.resume(farmMoneyCoroutine)
 end
 
 local function stopFarmMoney()
-    farmMoneyActive = false
-    farmMoneyCoroutine = nil
+   farmMoneyActive = false
+   farmMoneyCoroutine = nil
 end
 
--- Start/stop membuka telur
+-- Start / Stop Open Egg coroutine
 local function startOpenEgg()
-    if openEggCoroutine then return end
-    openEggActive = true
-    openEggCoroutine = coroutine.create(function()
-        while openEggActive do
-            openEgg()
-            wait(1)
-        end
-    end)
-    coroutine.resume(openEggCoroutine)
+   if openEggCoroutine then return end
+   openEggActive = true
+   openEggCoroutine = coroutine.create(function()
+      while openEggActive do
+         openEgg()
+         wait(1)
+      end
+   end)
+   coroutine.resume(openEggCoroutine)
 end
 
 local function stopOpenEgg()
-    openEggActive = false
-    openEggCoroutine = nil
+   openEggActive = false
+   openEggCoroutine = nil
 end
 
--- Start/stop auto win
+-- Start / Stop Auto Win coroutine
 local function startAutoWin()
-    if autoWinCoroutine then return end
-    autoWinActive = true
-    autoWinCoroutine = coroutine.create(autoWin)
-    coroutine.resume(autoWinCoroutine)
+   if autoWinCoroutine then return end
+   autoWinActive = true
+   autoWinCoroutine = coroutine.create(autoWin)
+   coroutine.resume(autoWinCoroutine)
 end
 
 local function stopAutoWin()
-    autoWinActive = false
-    autoWinCoroutine = nil
+   autoWinActive = false
+   autoWinCoroutine = nil
 end
 
--- Buat toggle Rayfield di Tab AutoFarm
-local FarmMoneyToggle = AutoFarmTab:CreateToggle({
-    Name = "Auto Farm Uang",
-    CurrentValue = false,
-    Flag = "FarmMoneyToggle",
-    Description = "Otomatis farming uang.",
-    Callback = function(Value)
-        if Value then
-            startFarmMoney()
-        else
-            stopFarmMoney()
-        end
-    end,
+-- Create toggles in AutoFarm tab for farming, egg, and auto win
+AutoFarmTab:CreateToggle({
+   Name = "Auto Farm Uang",
+   CurrentValue = false,
+   Flag = "FarmMoneyToggle",
+   Description = "Otomatis farming uang.",
+   Callback = function(Value)
+      if Value then
+         startFarmMoney()
+      else
+         stopFarmMoney()
+      end
+   end,
 })
 
-local OpenEggToggle = AutoFarmTab:CreateToggle({
-    Name = "Auto Buka Telur",
-    CurrentValue = false,
-    Flag = "OpenEggToggle",
-    Description = "Otomatis membuka telur.",
-    Callback = function(Value)
-        if Value then
-            startOpenEgg()
-        else
-            stopOpenEgg()
-        end
-    end,
+AutoFarmTab:CreateToggle({
+   Name = "Auto Buka Telur",
+   CurrentValue = false,
+   Flag = "OpenEggToggle",
+   Description = "Otomatis membuka telur.",
+   Callback = function(Value)
+      if Value then
+         startOpenEgg()
+      else
+         stopOpenEgg()
+      end
+   end,
 })
 
-local AutoWinToggle = AutoFarmTab:CreateToggle({
-    Name = "Auto Win",
-    CurrentValue = false,
-    Flag = "AutoWinToggle",
-    Description = "Otomatis menang dan loncat setiap 60 detik dengan ketinggian setting.",
-    Callback = function(Value)
-        if Value then
-            startAutoWin()
-        else
-            stopAutoWin()
-        end
-    end,
+AutoFarmTab:CreateToggle({
+   Name = "Auto Win",
+   CurrentValue = false,
+   Flag = "AutoWinToggle",
+   Description = "Otomatis menang dan loncat setiap 60 detik dengan ketinggian setting.",
+   Callback = function(Value)
+      if Value then
+         startAutoWin()
+      else
+         stopAutoWin()
+      end
+   end,
 })
 
+-- Instruction paragraph
 AutoFarmTab:CreateParagraph({
-    Title = "AutoFarm Instructions",
-    Content = "Aktifkan toggle di atas untuk auto farm uang, buka telur, atau auto win."
+   Title = "AutoFarm Instructions",
+   Content = "Aktifkan toggle di atas untuk auto farm uang, buka telur, atau auto win."
 })
-
