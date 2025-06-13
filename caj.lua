@@ -1,3 +1,18 @@
+
+The user asks to also allow "auto win" functionality to use height (ketinggian) instead of just relying on time-based jumps every 60 seconds. The current "auto win" code triggers a jump every 60 seconds and fires some remote events with a hardcoded height value (like 14400.854642152786). The user wants to add a GUI element to set the height value dynamically for auto win as well, similar to how farming height was added.
+
+Plan:
+- Add a new slider input in the GUI for "Auto Win Height".
+- Store the value in a variable (e.g. autoWinHeight).
+- Update the auto win coroutine to send the height from that variable instead of a hardcoded number.
+- Optionally, modify the jump logic to trigger jump based on height or together with time. But since the user just said "pakai ketinggian juga" meaning using height also, I assume primarily update the heights sent in remote events and keep jump logic. Possibly allow the jump timing unchanged or optionally add height-based conditional jump if needed.
+- Keep consistent code style with the previous slider for farm height.
+
+Next, I will produce the updated full code snippet including the new slider and updated auto win function accordingly.
+
+
+`ClimbAndJumpTowerScript.lua`
+```lua
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- Create window
@@ -108,6 +123,22 @@ local running = false -- Track the loop state
 local lastJumpTime = 0
 local autoWinThread
 
+-- Add slider for Auto Win Height
+local autoWinHeight = 14400.85 -- default value
+
+AutoFarmTab:CreateSlider({
+    Name = "Auto Win Height",
+    Min = 14000,
+    Max = 14600,
+    Increment = 1,
+    Suffix = " Height",
+    CurrentValue = autoWinHeight,
+    Flag = "AutoWinHeightSlider",
+    Callback = function(Value)
+        autoWinHeight = Value
+    end,
+})
+
 -- Auto Wins Toggle
 local Toggle = MainTab:CreateToggle({
    Name = "Auto Wins",
@@ -126,8 +157,8 @@ local Toggle = MainTab:CreateToggle({
                game:GetService("ReplicatedStorage"):WaitForChild("ServerMsg"):WaitForChild("Setting"):InvokeServer(unpack(args1))
                wait()
 
-               -- Fire event with value
-               local args2 = { "\232\181\183\232\183\179", 14400.854642152786 }
+               -- Fire event with height from slider
+               local args2 = { "\232\181\183\232\183\179", autoWinHeight }
                game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args2))
                wait()
 
@@ -186,10 +217,28 @@ local openEggActive = false
 local farmMoneyCoroutine
 local openEggCoroutine
 
+-- The farming height value from the GUI slider, default to 14405.45
+local farmHeight = 14405.45
+
+-- Slider for Farming Height control (ensure declared before usage)
+AutoFarmTab:CreateSlider({
+    Name = "Farming Height",
+    Min = 14000,
+    Max = 14600,
+    Increment = 1,
+    Suffix = " Height",
+    CurrentValue = farmHeight,
+    Flag = "FarmHeightSlider",
+    Callback = function(Value)
+        farmHeight = Value
+    end,
+})
+
 -- Fungsi farming uang (memanggil Remote dengan beberapa argumen)
 local function farmMoney()
-    local args1 = {"\232\181\183\232\183\179", 14405.461171865463}
-    local args2 = {"\232\181\183\232\183\179", 14400.405507802963}
+    -- Use farmHeight for both height values with a small offset
+    local args1 = {"\232\181\183\232\183\179", farmHeight + 5}
+    local args2 = {"\232\181\183\232\183\179", farmHeight}
     local args3 = {"\232\144\189\229\156\176"}
 
     remoteEvent:FireServer(unpack(args1))
@@ -218,7 +267,7 @@ local function startFarmMoney()
     farmMoneyCoroutine = coroutine.create(function()
         while farmMoneyActive do
             farmMoney()
-            wait(0.33) -- 3x lebih cepat
+            wait(0.33)
         end
     end)
     coroutine.resume(farmMoneyCoroutine)
@@ -235,7 +284,7 @@ local function startOpenEgg()
     openEggCoroutine = coroutine.create(function()
         while openEggActive do
             openEgg()
-            wait(1) -- 3x lebih cepat
+            wait(1)
         end
     end)
     coroutine.resume(openEggCoroutine)
@@ -279,3 +328,5 @@ AutoFarmTab:CreateParagraph({
     Title = "AutoFarm Instructions",
     Content = "Aktifkan toggle di atas untuk auto farm uang atau auto buka telur."
 })
+
+```
