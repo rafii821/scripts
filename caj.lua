@@ -209,7 +209,6 @@ local running = false -- Status loop
 local autoWinThread
 local jumpHeightThreshold = 100 -- Ganti sesuai kebutuhanmu, misal: 100, 150, dst
 
--- Toggle Auto Wins
 MainTab:CreateToggle({
    Name = "Auto Menang",
    CurrentValue = false,
@@ -221,38 +220,35 @@ MainTab:CreateToggle({
       if running then
          autoWinThread = task.spawn(function()
             while running do
-               -- Pengaturan otomatis
-               local args1 = { "isAutoOn", 1 }
-               game:GetService("ReplicatedStorage"):WaitForChild("ServerMsg"):WaitForChild("Setting"):InvokeServer(unpack(args1))
-               wait()
-
-               -- Kirim event dengan nilai
-               local args2 = { "\232\181\183\232\183\179", 14400.854642152786 }
-               game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args2))
-               wait()
-
-               -- Kirim perintah menang
-               local args3 = { "\233\162\134\229\143\150\230\165\188\233\161\182wins" }
-               game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args3))
-               wait()
-
-               -- Lompat berdasarkan tinggi
                local player = game:GetService("Players").LocalPlayer
                local character = player.Character
                if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChildOfClass("Humanoid") then
                   local height = character.HumanoidRootPart.Position.Y
                   if height >= jumpHeightThreshold then
+                     -- Aktifkan auto win
+                     local args1 = { "isAutoOn", 1 }
+                     game:GetService("ReplicatedStorage"):WaitForChild("ServerMsg"):WaitForChild("Setting"):InvokeServer(unpack(args1))
+                     wait()
+
+                     -- Trigger kemenangan
+                     local args2 = { "\232\181\183\232\183\179", 14400.854642152786 }
+                     game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args2))
+                     wait()
+
+                     local args3 = { "\233\162\134\229\143\150\230\165\188\233\161\182wins" }
+                     game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent"):FireServer(unpack(args3))
+                     wait()
+
+                     -- Lompat
                      character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
                      wait(0.2)
                   end
                end
-
-               wait(1)
+               wait(0.2) -- Cek setiap 0.2 detik
             end
          end)
       else
          running = false
-         -- Berhenti loop
       end
    end,
 })
