@@ -1,31 +1,29 @@
---[[
-  FINAL PATCH 2025 - AUTO FARM + AUTO WIN + AUTO RESPAWN (CLOUDHUB)
-  - Semua fitur dalam 1 GUI lokal (tidak perlu Rayfield)
-  - Auto Farm Uang, Auto Buka Telur, Auto Win (respawn aman patch 2025)
-  - Respawn via RemoteEvent ke server (WAJIB ada handler di ServerScriptService, lihat bawah)
-  - Tidak ada error, sudah dites!
-  - By: rafii821 & Copilot
-
-  [PENTING!!] Pasang script server-side respawn (lihat bawah) di ServerScriptService!
+--[[ 
+  FINAL PATCH 2025 - GUI AUTO FARM + AUTO WIN (RESPAWN SERVER) 
+  Pasang di StarterPlayerScripts atau StarterCharacterScripts!
+  Server-side respawn Wajib! (lihat bawah)
 ]]
 
--- === CLIENT SIDE SCRIPT (LET'S GOOO) ===
+-- ==== CLIENT SIDE ====
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
+
+-- Tunggu PlayerGui ready!
 local playerGui = player:WaitForChild("PlayerGui")
 
+-- Pastikan RemoteEvent ada (jika error di sini, pastikan nama benar di Explorer!)
 local remoteEvent = ReplicatedStorage:WaitForChild("Msg"):WaitForChild("RemoteEvent")
 local drawHeroInvoke = ReplicatedStorage:WaitForChild("Tool"):WaitForChild("DrawUp"):WaitForChild("Msg"):WaitForChild("DrawHero")
-local respawnEvent = ReplicatedStorage:WaitForChild("RespawnEvent") -- PATCHED: respawn via remote
+local respawnEvent = ReplicatedStorage:WaitForChild("RespawnEvent")
 
 -- UI SETUP
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AutoFarmWinGui"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
+screenGui.Parent = playerGui -- WAJIB PARENT KE PlayerGui
 
 local function createButton(name, text, position)
     local btn = Instance.new("TextButton")
@@ -121,16 +119,14 @@ local function openEgg()
     end
 end
 
--- ==== AUTO WIN (PATCH 2025, RESPWAN SERVER) ====
+-- ==== AUTO WIN (PATCH 2025, RESPAWN SERVER) ====
 local function autoWin()
     local lastRespawn = tick()
     while autoWinActive do
-        -- Farming win
         local args2 = { "\232\181\183\232\183\179", 14400.854642152786 }
         remoteEvent:FireServer(unpack(args2))
         local args3 = { "\233\162\134\229\143\150\230\165\188\233\161\182wins" }
         remoteEvent:FireServer(unpack(args3))
-        -- Respawn tiap 60 detik via RemoteEvent ke server
         if tick() - lastRespawn >= 60 then
             respawnEvent:FireServer()
             lastRespawn = tick()
@@ -224,13 +220,12 @@ autoWinBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==== INFO ====
-print("CLOUDHUB AUTO PATCH 2025 - SEMUA FITUR AKTIF!")
+print("CLOUDHUB PATCH 2025 - GUI AKTIF!")
 
 -----------------------------------------------------------------------
--- SERVER SIDE PATCH: WAJIB DI ServerScriptService (Bukan di Client!)
+-- SERVER SIDE PATCH (Script baru di ServerScriptService, jangan dihapus!)
 -----------------------------------------------------------------------
---[[
+--[[ 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local respawnEvent = ReplicatedStorage:FindFirstChild("RespawnEvent") or Instance.new("RemoteEvent")
 respawnEvent.Name = "RespawnEvent"
@@ -242,4 +237,3 @@ respawnEvent.OnServerEvent:Connect(function(player)
     end
 end)
 ]]
---==================== END OF PATCH ====================
