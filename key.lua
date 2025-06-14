@@ -9,7 +9,7 @@ local VALID_KEYS = {
 
 local scriptURLs = {
     [15900013841] = "https://raw.githubusercontent.com/rafii821/scripts/refs/heads/main/bldb.lua", -- blade ball
-    [109983668079237] = "https://raw.githubusercontent.com/gumanba/Scripts/refs/heads/main/StealaBrainrot", -- steal a brainrot
+    [109983668079237] = "https://raw.githubusercontent.com/rafii821/scripts/refs/heads/main/sab.lua", -- steal a brainrot
     [126884695634066] = "https://raw.githubusercontent.com/rafii821/scripts/refs/heads/main/ga.lua",  -- gag
     [15839834917] = "https://pastefy.app/6j0CmXgN/raw", -- Crash Out Simulator
     [129159449618378] = "https://pastefy.app/cxkvygky/raw", -- Cash Incremental
